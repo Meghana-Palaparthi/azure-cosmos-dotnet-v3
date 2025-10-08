@@ -20,7 +20,6 @@ namespace Microsoft.Azure.Cosmos.Routing
     /// </summary>
     internal sealed class CollectionRoutingMap
     {
-        private const string useLengthAwareComparatorEnvVar = "UseLengthAwareRangeComparator";
         /// <summary>
         /// Partition key range id to partition address and range.
         /// </summary>
@@ -143,12 +142,11 @@ namespace Microsoft.Azure.Cosmos.Routing
 
             SortedList<string, PartitionKeyRange> partitionRanges = new SortedList<string, PartitionKeyRange>();
 
-            string useLengthAwareRangeComparator = Environment.GetEnvironmentVariable(useLengthAwareComparatorEnvVar);
-            bool lengthAwareComparison = !string.IsNullOrEmpty(useLengthAwareRangeComparator) && useLengthAwareRangeComparator.Equals(bool.FalseString, StringComparison.OrdinalIgnoreCase);
+            bool isLengthAwareComparisonEnabled = ConfigurationManager.GetEnvironmentVariable<bool>(ConfigurationManager.UseLengthAwareRangeComparator, true);
 
             bool useLengthAwareComparison = false;
             // Enable length-aware comparison for provided partition EPK ranges only when the container uses a hierarchical partition key (MultiHash).
-            if (!lengthAwareComparison && this.partitionKeyDefinition != null && this.partitionKeyDefinition.Kind == PartitionKind.MultiHash)
+            if (isLengthAwareComparisonEnabled && this.partitionKeyDefinition != null && this.partitionKeyDefinition.Kind == PartitionKind.MultiHash && this.partitionKeyDefinition.Paths.Count > 1)
             {
                 useLengthAwareComparison = true;
             }
